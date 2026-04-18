@@ -1,0 +1,25 @@
+# IDE
+.vscode/
+archive/
+
+# Build artifacts
+bin/
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+
+# Executables
+rt-engine
+*.exe
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
+
+# Vendor - ImGui (install separately)
+src/vendor/imgui/
+
