@@ -22,4 +22,4 @@ rt-engine
 
 # Vendor - ImGui (install separately)
 src/vendor/imgui/
-
+.archive/
