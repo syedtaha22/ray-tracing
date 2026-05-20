@@ -13,7 +13,7 @@
  * Negative halves drawn as darker, thinner lines (like Blender).
  */
 
-class Gimbal {
+export class Gimbal {
     constructor(canvasId) {
         this._canvas = document.getElementById(canvasId);
         this._ctx    = this._canvas ? this._canvas.getContext('2d') : null;
@@ -118,5 +118,3 @@ class Gimbal {
         ctx.fill();
     }
 }
-
-export { Gimbal };
