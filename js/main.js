@@ -86,10 +86,22 @@ async function main() {
     // Render loop
     let fpsT = performance.now(), fpsN = 0;
 
+    let lastSunAz = -999, lastSunEl = -999;
+
     function loop() {
         if (ui.useRealTime) {
             sun.syncToRealTime();
             ui.syncSunDisplay();
+
+            // Reset accumulation when sun moves more than 0.1° —
+            // avoids ghosting as the sun travels across the sky
+            const azDiff = Math.abs(sun.azimuth   - lastSunAz);
+            const elDiff = Math.abs(sun.elevation - lastSunEl);
+            if (azDiff > 0.1 || elDiff > 0.1) {
+                renderer.scheduleReset();
+                lastSunAz = sun.azimuth;
+                lastSunEl = sun.elevation;
+            }
         }
 
         renderer.render(camera, scene, sun);

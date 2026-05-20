@@ -21,6 +21,13 @@ export class UI {
         document.getElementById('sunEl').value        = this._sun.elevation;
         document.getElementById('sunAzV').textContent = this._sun.azimuth.toFixed(0);
         document.getElementById('sunElV').textContent = this._sun.elevation.toFixed(1);
+
+        // Show local time in the panel when synced
+        const now = new Date();
+        const hh  = String(now.getHours()).padStart(2, '0');
+        const mm  = String(now.getMinutes()).padStart(2, '0');
+        const el  = document.getElementById('realTimeDisplay');
+        if (el) el.textContent = hh + ':' + mm;
     }
 
     updateStats(fps, samples) {
@@ -48,6 +55,17 @@ export class UI {
         this._wire('sunSize', 'sunSizeV', 1, v => { this._sun.size      = v; this._renderer.scheduleReset(); });
         this._wire('expo',    'expoV',    2, v => { this._renderer.exposure   = v; });
         this._wire('denoise', 'denoiseV', 2, v => { this._renderer.denoiseStr = v; });
+
+        // Path tracer controls
+        this._wire('bounces', 'bouncesV', 0, v => { this._renderer.maxBounces = v; this._renderer.scheduleReset(); });
+        this._wire('volDens',    'volDensV',    3, v => { this._renderer.volDensity = v;  this._renderer.scheduleReset(); });
+        this._wire('volHeight',  'volHeightV',  2, v => { this._renderer.volHeight  = v;  this._renderer.scheduleReset(); });
+        this._wire('volScatter', 'volScatterV', 1, v => { this._renderer.volScatter = v;  this._renderer.scheduleReset(); });
+
+        document.getElementById('shadowsOn').addEventListener('change', e => {
+            this._renderer.shadowsOn = e.target.checked ? 1 : 0;
+            this._renderer.scheduleReset();
+        });
 
         document.getElementById('useRealTime').addEventListener('change', e => {
             this._useRealTime = e.target.checked;

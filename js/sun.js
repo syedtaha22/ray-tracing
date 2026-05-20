@@ -49,8 +49,10 @@ export class Sun {
      * @returns {number[]} RGB intensity triplet
      */
     get color() {
-        const t = Math.max(0, Math.min(1, this.elevation / 25.0));
-        const i = 3.5 + t * 2.5;
+        // Sky shader now handles night itself — color only matters when sun is up
+        const elRad = this.elevation * Math.PI / 180;
+        const t     = Math.max(0, Math.min(1, this.elevation / 25.0));
+        const i     = (3.5 + t * 2.5) * Math.max(0, Math.sin(elRad));
         return [i, (0.48 + t * 0.28) * i, (0.07 + t * 0.48) * i];
     }
 
@@ -70,13 +72,14 @@ export class Sun {
         const now   = new Date();
 
         // Convert the time to a decimal hour format (e.g., 14.5 for 2:30 PM).
-        const hours = now.getHours() + now.getMinutes() / 60.0;
-        const t     = (hours - 6) / 12; // 0 = sunrise, 1 = sunset
+        const hours = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+        const t     = (hours - 6) / 12; // 0 at 6am, 1 at 6pm, negative at night
 
-        // Azimuth: 15deg per hour, starting at 0° (north) at 00:00.
-        this.azimuth   = (hours * 15) % 360;
-        
-        // Elevation: sine arc between 06:00–18:00, negative at night
-        this.elevation = (t < 0 || t > 1) ? 0 : Math.sin(t * Math.PI) * 60;
+        // Full 360° azimuth rotation over 24 hours (180° = south at noon)
+        this.azimuth = (hours / 24) * 360;
+
+        // Elevation: full sine arc, peaks at solar noon (~90° max at equator)
+        // Range -90 to +90 — negative means below horizon (night)
+        this.elevation = Math.sin(t * Math.PI) * 75;
     }
 }

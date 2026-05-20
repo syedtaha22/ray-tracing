@@ -24,10 +24,12 @@
         <div class="time-sync">
             <input type="checkbox" id="useRealTime">
             <label for="useRealTime">Sync to Real Time</label>
+            <span id="realTimeDisplay"
+                style="margin-left:8px;opacity:0.6;font-size:0.85em;font-variant-numeric:tabular-nums;"></span>
         </div>
 
         <label>Sun Elevation: <span id="sunElV">8.0</span>°</label>
-        <input type="range" id="sunEl" min="0" max="90" value="8" step="0.5">
+        <input type="range" id="sunEl" min="-90" max="90" value="8" step="0.5">
 
         <label>Sun Rotation: <span id="sunAzV">160</span>°</label>
         <input type="range" id="sunAz" min="0" max="360" value="160" step="1">
@@ -43,6 +45,23 @@
         <input type="range" id="expo" min="0.2" max="4.0" value="1.2" step="0.05">
         <label>Denoise: <span id="denoiseV">0.80</span></label>
         <input type="range" id="denoise" min="0" max="1" value="0.8" step="0.05">
+        <div class="sep"></div>
+        <div class="sep"></div>
+        <h3 style="margin-top:8px">Path Tracer</h3>
+        <label>Max Bounces: <span id="bouncesV">6</span></label>
+        <input type="range" id="bounces" min="1" max="12" value="6" step="1">
+        <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+            <input type="checkbox" id="shadowsOn" checked>
+            <label for="shadowsOn" style="cursor:pointer">Shadows</label>
+        </div>
+        <div class="sep"></div>
+        <h3 style="margin-top:8px">Atmosphere</h3>
+        <label>Density: <span id="volDensV">0.055</span></label>
+        <input type="range" id="volDens" min="0.005" max="0.25" value="0.055" step="0.005">
+        <label>Height Falloff: <span id="volHeightV">0.12</span></label>
+        <input type="range" id="volHeight" min="0.01" max="0.5" value="0.12" step="0.01">
+        <label>Scatter: <span id="volScatterV">5.5</span></label>
+        <input type="range" id="volScatter" min="0.5" max="15.0" value="5.5" step="0.5">
         <div class="sep"></div>
         <button id="reset">Reset Accumulation</button>
         <button id="save">Save PNG</button>

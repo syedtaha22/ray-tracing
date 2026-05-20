@@ -22,6 +22,7 @@ out vec4 fragColor;
 
 uniform sampler2D u_tex;
 uniform float u_exposure;
+uniform float     u_sunElevation; // degrees -90..+90
 
 /**
  * ACES Filmic Tone Mapping Curve
@@ -34,9 +35,16 @@ vec3 aces(vec3 x) {
 }
 
 void main() {
-  // Sample HDR accumulation buffer
-  vec3 c = aces(texture(u_tex, v_uv).rgb);
-  
-  // Apply gamma correction for sRGB display
-  fragColor = vec4(pow(c, vec3(1.0 / 2.2)), 1.0);
+    vec3 c = texture(u_tex, v_uv).rgb;
+
+    // Night desaturation only — above water, moonlight is nearly greyscale.
+    // Underwater appearance is handled physically in trace.glsl (Beer's law,
+    // volumetric absorption) so we do NOT apply any tint here.
+    float dayAmt = smoothstep(-12.0, 8.0, u_sunElevation);
+    float lum    = dot(c, vec3(0.299, 0.587, 0.114));
+    // Blend toward cool greyscale at night
+    c = mix(vec3(lum) * vec3(0.82, 0.88, 0.98), c, mix(0.2, 1.0, dayAmt));
+
+    c = aces(c);
+    fragColor = vec4(pow(max(c, vec3(0.0)), vec3(1.0/2.2)), 1.0);
 }

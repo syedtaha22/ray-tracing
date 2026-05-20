@@ -28,12 +28,22 @@ export class Renderer {
         this.needReset  = false;
         this.exposure   = 1.2;
         this.denoiseStr = 0.8;
+
+        // Path tracer controls
+        this.maxBounces  = 6;
+        this.shadowsOn   = 1;     // 1 = on, 0 = off
+
+        // World atmosphere controls
+        this.volDensity  = 0.055; // base scattering density
+        this.volHeight   = 0.12;  // exponential falloff rate
+        this.volScatter  = 5.5;   // scatter multiplier
     }
 
     // -------------------------------------------------------------------------
     // Init — call once after shaders are loaded
     // -------------------------------------------------------------------------
     init(shaders) {
+        this._locCache = new WeakMap(); // clear stale locations on re-init
         const gl = this.gl;
         this._progs = {
             trace:   this._makeProgram(shaders.VS, shaders.FS_TRACE),
@@ -81,10 +91,16 @@ export class Renderer {
 
         this._u1i(this._progs.trace, 'u_prev',         0);
         this._u1i(this._progs.trace, 'u_frame',        this.frame);
+        this._u1f(this._progs.trace, 'u_time',         performance.now() / 1000.0);
         this._u3fv(this._progs.trace, 'u_sunDir',      sun.direction);
         this._u3fv(this._progs.trace, 'u_sunColor',    sun.color);
         this._u1f(this._progs.trace, 'u_sunSize',      sun.size);
         this._u1f(this._progs.trace, 'u_sunIntensity', sun.intensity);
+        this._u1i(this._progs.trace, 'u_maxBounces',   this.maxBounces);
+        this._u1i(this._progs.trace, 'u_shadowsOn',    this.shadowsOn);
+        this._u1f(this._progs.trace, 'u_volDensity',   this.volDensity);
+        this._u1f(this._progs.trace, 'u_volHeight',    this.volHeight);
+        this._u1f(this._progs.trace, 'u_volScatter',   this.volScatter);
         this._u3fv(this._progs.trace, 'u_volMin',      scene.volMin);
         this._u3fv(this._progs.trace, 'u_volMax',      scene.volMax);
         this._setCamUniforms(this._progs.trace, cam, camera.fov);
@@ -119,6 +135,7 @@ export class Renderer {
         gl.bindTexture(gl.TEXTURE_2D, curTex);
         this._u1i(this._progs.display, 'u_tex',      0);
         this._u1f(this._progs.display, 'u_exposure', this.exposure);
+        this._u1f(this._progs.display, 'u_sunElevation', sun.elevation);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
         gl.bindVertexArray(null);
 
@@ -135,6 +152,7 @@ export class Renderer {
         gl.viewport(0, 0, this.W, this.H);
         gl.useProgram(this._progs.normal);
         gl.bindVertexArray(this._quadVAO);
+        this._u1f(this._progs.normal, 'u_time', performance.now() / 1000.0);
         this._setCamUniforms(this._progs.normal, cam, camera.fov);
         this._setSceneUniforms(this._progs.normal, scene);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);

@@ -15,11 +15,80 @@
  */
 
 #define N_OBJ 16
+#define WATER_Y -1.0        // world-space Y of the water plane
+#define WATER_IOR 1.333
 
 uniform vec3  u_pos[N_OBJ];
 uniform vec3  u_half[N_OBJ];
 uniform int   u_mat[N_OBJ];
 uniform float u_active[N_OBJ];
+uniform float u_time;
+
+// Four-octave wave height — calm ocean swell with visible surface movement
+// Amplitudes tuned so waves are readable from above but not violent
+float waveHeight(vec2 xz) {
+  // Primary swell — long wavelength, slow, dominant
+  float h  = sin(xz.x * 0.40 + u_time * 0.55) * cos(xz.y * 0.30 + u_time * 0.45) * 0.28;
+  
+  // Secondary cross-swell at ~60° angle
+  h += sin(xz.x * 0.95 - u_time * 0.70) * cos(xz.y * 1.05 + u_time * 0.60) * 0.12;
+  
+  // Ripple layer — smaller, faster
+  h += sin(xz.x * 3.70 + u_time * 1.20) * cos(xz.y * 4.30 - u_time * 1.00) * 0.030;
+  
+  // Fine detail
+  h += sin(xz.x * 8.10 - u_time * 1.80) * cos(xz.y * 7.50 + u_time * 1.60) * 0.008;
+  
+  return h;
+}
+
+// Normal sample epsilon — larger for the bigger waves
+vec3 waveNormal(vec2 xz) {
+    float eps = 0.08;
+    float hL = waveHeight(xz - vec2(eps, 0.0));
+    float hR = waveHeight(xz + vec2(eps, 0.0));
+    float hD = waveHeight(xz - vec2(0.0, eps));
+    float hU = waveHeight(xz + vec2(0.0, eps));
+    return normalize(vec3(hL - hR, 2.0 * eps, hD - hU));
+}
+
+// True water Y at this XZ position (plane + wave displacement)
+float waterSurfaceY(vec2 xz) {
+  return WATER_Y + waveHeight(xz);
+}
+
+// Is this world-space point underwater?
+bool underwater(vec3 p) {
+  return p.y < waterSurfaceY(p.xz);
+}
+
+
+// Returns t along ray, or -1.0 on miss.
+float hitWaterPlane(vec3 ro, vec3 rd) {
+  if (abs(rd.y) < 1e-5)
+    return -1.0; // nearly horizontal ray never hits plane
+
+  float tFlat = (WATER_Y - ro.y) / rd.y;
+  if (tFlat < 5e-3) 
+    return -1.0; // miss or self-hit
+
+  // 5 Newton iterations for grazing angles
+  float t = tFlat;
+  for (int i = 0; i < 5; i++) {
+    vec2  xz  = ro.xz + rd.xz * t;
+    float err = waterSurfaceY(xz) - (ro.y + rd.y * t);
+    t += err / rd.y;
+
+    if (abs(err) < 5e-5) 
+      break;
+  }
+
+  if (t < 5e-3) 
+    return -1.0;
+
+  return t;
+}
+
 
 /**
  * Raycast result structure
@@ -31,6 +100,7 @@ struct Hit {
   float t;
   vec3 n;
   int mat;
+  bool  isWater;   // true = infinite water plane hit
 };
 
 /**
@@ -50,7 +120,8 @@ Hit hitBox(vec3 ro, vec3 rd, int i) {
   Hit h;
   h.t = -1.0;
   h.mat = -1;
-  
+  h.isWater = false;
+
   // Skip inactive objects entirely (avoids ANGLE recompile issue)
   if (u_active[i] < 0.5)
     return h;
@@ -108,8 +179,20 @@ Hit intersect(vec3 ro, vec3 rd) {
   Hit best;
   best.t = 1e9;
   best.mat = -1;
-  
-  // Test all objects (loop is probably unrolled at compile time due to N_OBJ being #define)
+  best.isWater = false;
+
+  // Infinite water plane (mat 1) — replaces the flat AABB sea slab
+  float tw = hitWaterPlane(ro, rd);
+  if (tw > 1e-3) {
+      best.t       = tw;
+      best.mat     = 1;
+      best.isWater = true;
+      vec2 xz      = ro.xz + rd.xz * tw;
+      vec3 wn      = waveNormal(xz);
+      // Flip normal if ray hits from below
+      best.n = dot(rd, wn) < 0.0 ? wn : -wn;
+  }
+
   for (int i = 0; i < N_OBJ; i++) {
     Hit h = hitBox(ro, rd, i);
     if (h.t > 1e-3 && h.t < best.t)
@@ -131,6 +214,11 @@ Hit intersect(vec3 ro, vec3 rd) {
  * @return true if occluded, false if in shadow
  */
 bool inShadow(vec3 p, vec3 d, float mx) {
+  // Water plane shadow
+  float tw = hitWaterPlane(p, d);
+  if (tw > 8e-3 && tw < mx) 
+    return true;
+
   for (int i = 0; i < N_OBJ; i++) {
     Hit h = hitBox(p, d, i);
     if (h.t > 2e-3 && h.t < mx)

@@ -41,9 +41,9 @@ const N_OBJ = 16;
 export class Scene {
     constructor() {
         const objects = [
-            { pos: b2gl(0, 0, -1.218),         half: b2dim(1, 1, 1),               mat: 0, on: 1 },
-            { pos: b2gl(0, 0, -1.0),            half: [20.861, 0.02, 20.861],       mat: 1, on: 1 },
-            { pos: b2gl(0, 0, 1.0),             half: b2dim(18.509, 18.509, 18.509),mat: 2, on: 0 }, // volume bounds
+            { pos: b2gl(0, 0, -1.218),         half: b2dim(1, 1, 1),               mat: 2, on: 1 }, // mat 0→2 (matte)
+            // Sea plane is now a world property — no bounding cube needed
+            // volume bounds cube removed (redundant — volume is now a world property)
             { pos: b2gl(4.207, 6.625, 1.119),   half: [0.0785, 0.0785, 0.0785],    mat: 2, on: 1 },
             { pos: b2gl(4.511, 5.842, 1.141),   half: [0.0785, 0.0785, 0.0785],    mat: 2, on: 1 },
             { pos: b2gl(4.478, 9.127, 1.315),   half: [0.0785, 0.0785, 0.0785],    mat: 2, on: 1 },
@@ -80,10 +80,8 @@ export class Scene {
             this.activeArr[i] = o.on;
         });
 
-        // Volume bounds for OBJ[2] — passed as explicit uniforms to avoid dynamic
-        // indexing in the shader (triggers ANGLE/D3D11 driver bugs).
-        const vol = objects[2];
-        this.volMin = vol.pos.map((p, i) => p - vol.half[i]);
-        this.volMax = vol.pos.map((p, i) => p + vol.half[i]);
+        // Volume is a world property — no bounding cube needed
+        this.volMin = [-999, -999, -999];
+        this.volMax = [ 999,  999,  999];
     }
 }
