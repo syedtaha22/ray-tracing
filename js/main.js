@@ -18,6 +18,7 @@ import { Sun }           from './sun.js';
 
 import { InputHandler }  from './input.js';
 import { UI }            from './ui.js';
+import { Gimbal }        from './gimbal.js';
 
 async function main() {
     // DOM refs
@@ -50,6 +51,7 @@ async function main() {
     const sun    = new Sun();
     const input  = new InputHandler(canvas, camera, renderer);
     const ui     = new UI(renderer, sun);
+    const gimbal  = new Gimbal('gimbal');
 
     // Context loss
     canvas.addEventListener('webglcontextlost', e => {
@@ -91,6 +93,7 @@ async function main() {
         }
 
         renderer.render(camera, scene, sun);
+        gimbal.draw(camera);
 
         fpsN++;
         const now = performance.now();
