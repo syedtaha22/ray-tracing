@@ -15,6 +15,7 @@ import { ShaderLoader }  from './shaders.js';
 import { Scene }         from './scene.js';
 import { Camera }        from './camera.js';
 import { Sun }           from './sun.js';
+import { Moon }          from './moon.js';
 
 import { InputHandler }  from './input.js';
 import { UI }            from './ui.js';
@@ -49,6 +50,7 @@ async function main() {
     const scene  = new Scene();
     const camera = new Camera();
     const sun    = new Sun();
+    const moon   = new Moon();
     const input  = new InputHandler(canvas, camera, renderer);
     const ui     = new UI(renderer, sun);
     const gimbal  = new Gimbal('gimbal');
@@ -104,7 +106,9 @@ async function main() {
             }
         }
 
-        renderer.render(camera, scene, sun);
+        moon.update();
+        renderer.render(camera, scene, sun, moon);
+        ui.updateMoonInfo(moon);
         gimbal.draw(camera);
 
         fpsN++;

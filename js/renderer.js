@@ -66,7 +66,7 @@ export class Renderer {
     // -------------------------------------------------------------------------
     // Per-frame render — call from requestAnimationFrame
     // -------------------------------------------------------------------------
-    render(camera, scene, sun) {
+    render(camera, scene, sun, moon) {
         const gl = this.gl;
 
         if (this.needReset) {
@@ -96,6 +96,10 @@ export class Renderer {
         this._u3fv(this._progs.trace, 'u_sunColor',    sun.color);
         this._u1f(this._progs.trace, 'u_sunSize',      sun.size);
         this._u1f(this._progs.trace, 'u_sunIntensity', sun.intensity);
+        this._u3fv(this._progs.trace, 'u_moonDir',     moon.direction);
+        this._u1f(this._progs.trace,  'u_moonPhase',   moon.phase);
+        this._u1f(this._progs.trace,  'u_moonBright',  moon.brightness);
+        this._u1f(this._progs.trace,  'u_moonUp',      moon.up);
         this._u1i(this._progs.trace, 'u_maxBounces',   this.maxBounces);
         this._u1i(this._progs.trace, 'u_shadowsOn',    this.shadowsOn);
         this._u1f(this._progs.trace, 'u_volDensity',   this.volDensity);

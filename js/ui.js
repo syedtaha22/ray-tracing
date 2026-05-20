@@ -1,14 +1,9 @@
-/**
- * ui.js
- * Wires all HTML controls (sliders, checkboxes, buttons) to the renderer.
- */
-
 "use strict";
 
 export class UI {
     constructor(renderer, sun) {
-        this._renderer   = renderer;
-        this._sun        = sun;
+        this._renderer    = renderer;
+        this._sun         = sun;
         this._useRealTime = false;
 
         this._bindSliders();
@@ -22,12 +17,30 @@ export class UI {
         document.getElementById('sunAzV').textContent = this._sun.azimuth.toFixed(0);
         document.getElementById('sunElV').textContent = this._sun.elevation.toFixed(1);
 
-        // Show local time in the panel when synced
+        // Show local time
         const now = new Date();
         const hh  = String(now.getHours()).padStart(2, '0');
         const mm  = String(now.getMinutes()).padStart(2, '0');
         const el  = document.getElementById('realTimeDisplay');
         if (el) el.textContent = hh + ':' + mm;
+    }
+
+    updateMoonInfo(moon) {
+        const el = document.getElementById('moonInfo');
+        if (!el) return;
+        const phaseName = UI._phaseName(moon.phase);
+        const pct       = Math.round(moon.brightness * 100);
+        el.textContent  = `☽  ${phaseName}  •  ${pct}% illuminated`;
+    }
+
+    static _phaseName(phase) {
+        // phase 0=new, 0.125=waxing crescent, 0.25=first quarter ...
+        const names = [
+            'New Moon', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous',
+            'Full Moon', 'Waning Gibbous',  'Last Quarter',  'Waning Crescent',
+        ];
+        const idx = Math.round(phase * 8) % 8;
+        return names[idx];
     }
 
     updateStats(fps, samples) {
@@ -93,13 +106,6 @@ export class UI {
         document.getElementById('useRealTime').checked = false;
     }
 
-    /**
-     * Binds a range input to a display span and a setter callback.
-     * @param {string}   id     Input element id
-     * @param {string}   valId  Span element id showing the value (or null)
-     * @param {number}   dec    Decimal places for display
-     * @param {Function} cb     Called with the parsed float value
-     */
     _wire(id, valId, dec, cb) {
         document.getElementById(id).addEventListener('input', e => {
             const v = parseFloat(e.target.value);
@@ -107,4 +113,8 @@ export class UI {
             cb(v);
         });
     }
+
+
+
+
 }
