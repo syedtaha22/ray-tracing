@@ -51,7 +51,7 @@ void main() {
   vec2 texel = 1.0 / u_res;
   float stride = pow(2.0, float(u_step));
   
-  // 1D Binomial filter kernel weights [1/16, 4/16, 6/16, 4/16, 1/16]
+  // Binomial filter kernel [1/16, 4/16, 6/16, 4/16, 1/16]
   const float kern[5] = float[](0.0625, 0.25, 0.375, 0.25, 0.0625);
   
   vec3 sum = vec3(0.0);
@@ -91,6 +91,6 @@ void main() {
     }
   }
   
-  // Accumulate weighted average using a safe epsilon threshold to prevent NaN division
+  // Accumulate weighted average (or pass through if no samples)
   fragColor = vec4(wSum > 0.0001 ? sum / wSum : cC, 1.0);
 }

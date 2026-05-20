@@ -9,12 +9,17 @@
 
 "use strict";
 
-import { loadShaders }           from './shaders.js';
-import { initWebGL, renderFrame, onContextLost, onContextRestored, scheduleReset } from './renderer.js';
-import { initInput }             from './input.js';
-import { initUI, updateSunUI, updateStats } from './ui.js';
+import { Renderer }      from './renderer.js';
+import { ShaderLoader }  from './shaders.js';
 
-(async function main() {
+import { Scene }         from './scene.js';
+import { Camera }        from './camera.js';
+import { Sun }           from './sun.js';
+
+import { InputHandler }  from './input.js';
+import { UI }            from './ui.js';
+
+async function main() {
     // DOM refs
     const canvas   = document.getElementById('c');
     const errDiv   = document.getElementById('err');
@@ -30,70 +35,75 @@ import { initUI, updateSunUI, updateStats } from './ui.js';
         errDiv.textContent    = msg;
     }
 
-    // WebGL2 context
-    const gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true, antialias: false });
-    if (!gl) {
-        showErr('WebGL 2 is not available.\nTry Chrome or Firefox on a desktop GPU.');
+
+    // --- Instantiate --------------------------------------------------------
+    let renderer;
+    try {
+        renderer = new Renderer(canvas);
+    } catch (e) {
+        showErr(e.message);
         return;
     }
-    if (!gl.getExtension('EXT_color_buffer_float')) {
-        showErr('EXT_color_buffer_float not supported.\nTry Chrome 90+ or Firefox 86+ on desktop.');
-        return;
-    }
+
+    const scene  = new Scene();
+    const camera = new Camera();
+    const sun    = new Sun();
+    const input  = new InputHandler(canvas, camera, renderer);
+    const ui     = new UI(renderer, sun);
 
     // Context loss
     canvas.addEventListener('webglcontextlost', e => {
         e.preventDefault();
-        onContextLost();
         console.warn('WebGL context lost');
     });
 
-    canvas.addEventListener('webglcontextrestored', () => {
-        onContextRestored();
+    canvas.addEventListener('webglcontextrestored', async () => {
         console.log('WebGL context restored');
         try {
-            initWebGL(gl, canvas.width, canvas.height, window.__shaders);
-            scheduleReset();
+            const shaders = await ShaderLoader.load();
+            renderer.init(shaders);
+            renderer.scheduleReset();
         } catch (e) {
             showErr('Context restore failed:\n\n' + e.message);
         }
     });
 
-    // Input (also sets initial canvas dimensions)
-    const input = initInput(canvas);
-    const { W, H } = input.getSize();
-
     // Load shaders
-    let shaders;
     try {
-        shaders = await loadShaders();
-        window.__shaders = shaders; // keep a reference for context-restore
+        const shaders = await ShaderLoader.load();
+        renderer.init(shaders);
     } catch (e) {
         showErr('Failed to load shaders:\n\n' + e.message);
         return;
     }
 
-    // Init WebGL
-    try {
-        initWebGL(gl, W, H, shaders);
-    } catch (e) {
-        showErr('Shader compile error:\n\n' + e.message);
-        return;
-    }
-
-    // UI controls
-    initUI();
-
     // Start
     loading.style.display = 'none';
     uiPanel.style.display = 'block';
 
+    // Render loop
+    let fpsT = performance.now(), fpsN = 0;
+
     function loop() {
-        renderFrame(
-            (fps, samples) => updateStats(fps, samples),
-            (az, el)        => updateSunUI(az, el),
-        );
+        if (ui.useRealTime) {
+            sun.syncToRealTime();
+            ui.syncSunDisplay();
+        }
+
+        renderer.render(camera, scene, sun);
+
+        fpsN++;
+        const now = performance.now();
+        if (now - fpsT > 500) {
+            ui.updateStats(fpsN / ((now - fpsT) / 1000), renderer.frame);
+            fpsN = 0;
+            fpsT = now;
+        }
+
         requestAnimationFrame(loop);
     }
+
     requestAnimationFrame(loop);
-})();
+}
+
+main();

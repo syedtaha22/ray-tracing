@@ -98,7 +98,7 @@ vec3 cosHemi(vec3 n, vec2 xi) {
   // cos(theta) = sqrt(xi.y)
   // sin(theta) = sqrt(1 - cos^2(theta))
 
-  float phi = 6.28318 * xi.x; 
+  float phi = 6.28318 * xi.x;
   float ct = sqrt(xi.y);
   float st = sqrt(max(0.0, 1.0 - xi.y));
   
