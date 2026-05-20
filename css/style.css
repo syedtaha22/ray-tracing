@@ -51,70 +51,223 @@ body {
     position: fixed;
     top: 12px;
     right: 12px;
-    background: rgba(0, 0, 0, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 8px;
-    padding: 12px 16px;
-    color: #ccc;
+    background: rgba(6, 8, 14, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: #bbb;
     font-family: 'Courier New', monospace;
     font-size: 11px;
-    min-width: 185px;
-    backdrop-filter: blur(6px);
+    min-width: 200px;
+    max-width: 220px;
+    backdrop-filter: blur(8px);
     user-select: none;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+    scrollbar-width: none;
 }
 
-/* UI Panel Heading Styles */
-#ui h3 {
-    color: #f80;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 8px;
+#ui::-webkit-scrollbar {
+    display: none;
 }
 
-/* UI Panel Row Container (flex layout for labels and values) */
-#ui .row {
+/* Stats bar*/
+.stats-bar {
     display: flex;
     justify-content: space-between;
-    gap: 12px;
-    margin: 3px 0;
+    gap: 4px;
+    margin-bottom: 4px;
 }
 
-/* UI Panel Value Display (bold white text) */
-#ui .v {
+.stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 9px;
+    color: #555;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.stat-val {
+    font-size: 12px;
     color: #fff;
     font-weight: bold;
+    margin-top: 1px;
 }
 
-/* UI Panel Label Styling */
-#ui label {
-    font-size: 10px;
-    color: #888;
-    display: block;
+/* Global row*/
+.global-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     margin: 6px 0 2px;
 }
 
-/* UI Panel Range Input (slider control) */
-#ui input[type=range] {
+.time-display {
+    font-size: 11px;
+    color: #f80;
+    opacity: 0.7;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.5px;
+}
+
+.moon-info {
+    font-size: 10px;
+    color: #7af;
+    opacity: 0.65;
+    margin: 3px 0 4px;
+    min-height: 14px;
+    letter-spacing: 0.3px;
+}
+
+/* Toggle / checkbox*/
+.toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    margin: 0;
+}
+
+.toggle-wrap input[type=checkbox] {
+    accent-color: #f80;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.toggle-label {
+    font-size: 10px;
+    color: #999;
+}
+
+/* Separator*/
+.sep {
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    margin: 8px 0;
+}
+
+/* Accordion*/
+.accord {
+    margin-bottom: 2px;
+}
+
+.accord-hd {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    color: #f80;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    text-align: left;
+}
+
+.accord-hd:hover {
+    background: rgba(255, 136, 0, 0.10);
+}
+
+/* Disabled state — when real-time sync locks sun/moon */
+.accord.locked .accord-hd {
+    color: #555;
+    border-color: rgba(255, 255, 255, 0.04);
+    cursor: default;
+}
+
+.accord.locked .accord-hd:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.accord.locked .accord-hd .accord-icon {
+    opacity: 0.3;
+}
+
+.accord-icon {
+    font-size: 12px;
+}
+
+.accord-arrow {
+    margin-left: auto;
+    transition: transform 0.2s;
+    font-size: 10px;
+    opacity: 0.6;
+}
+
+.accord.open .accord-arrow {
+    transform: rotate(180deg);
+}
+
+.accord-body {
+    display: none;
+    padding: 8px 4px 4px;
+}
+
+.accord.open .accord-body {
+    display: block;
+}
+
+/* Locked bodies are still shown (open to view) but inputs disabled */
+.accord.locked input[type=range],
+.accord.locked input[type=checkbox] {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* Sliders and labels inside accordion*/
+.accord-body label {
+    display: flex;
+    gap: 5px;
+    align-items: baseline;
+    font-size: 10px;
+    color: #777;
+    margin: 7px 0 2px;
+}
+
+.val {
+    color: #ddd;
+    font-size: 10px;
+}
+
+.phase-name {
+    color: #7af;
+    font-size: 9px;
+    margin-left: 4px;
+    opacity: 0.8;
+}
+
+.accord-body input[type=range] {
     width: 100%;
     height: 3px;
     accent-color: #f80;
     cursor: pointer;
 }
 
-/* UI Panel Checkbox Control */
-#ui input[type=checkbox] {
+.accord-body input[type=checkbox] {
     accent-color: #f80;
     cursor: pointer;
 }
 
-/* UI Panel Button Styling */
+/* Buttons*/
 #ui button {
     width: 100%;
-    margin-top: 8px;
+    margin-top: 6px;
     padding: 5px;
-    background: rgba(255, 136, 0, 0.12);
-    border: 1px solid rgba(255, 136, 0, 0.35);
+    background: rgba(255, 136, 0, 0.10);
+    border: 1px solid rgba(255, 136, 0, 0.30);
     color: #f80;
     font-size: 10px;
     border-radius: 4px;
@@ -123,45 +276,21 @@ body {
     transition: background 0.15s;
 }
 
-/* UI Panel Button Hover State */
 #ui button:hover {
-    background: rgba(255, 136, 0, 0.28);
+    background: rgba(255, 136, 0, 0.24);
 }
 
-/* UI Panel Section Separator */
-#ui .sep {
-    border-top: 1px solid rgba(255, 255, 255, 0.07);
-    margin: 8px 0;
-}
-
-/* UI Panel Time Sync Control (flex layout) */
-#ui .time-sync {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 6px 0;
-}
-
-/* UI Panel Time Sync Label (no margin override) */
-#ui .time-sync label {
-    margin: 0;
-}
-
-/**
- * HINT DISPLAY (#hint)
- * Fixed-position hint message displayed at the bottom center of the screen.
- * Fades out with a 1.5s transition. Non-interactive (pointer-events: none).
- */
+/* Misc*/
 #hint {
     position: fixed;
     bottom: 12px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: 6px;
     padding: 6px 14px;
-    color: #666;
+    color: #555;
     font-family: 'Courier New', monospace;
     font-size: 10px;
     letter-spacing: 0.5px;

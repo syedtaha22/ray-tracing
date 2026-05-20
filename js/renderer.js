@@ -100,6 +100,7 @@ export class Renderer {
         this._u1f(this._progs.trace,  'u_moonPhase',   moon.phase);
         this._u1f(this._progs.trace,  'u_moonBright',  moon.brightness);
         this._u1f(this._progs.trace,  'u_moonUp',      moon.up);
+        this._u1f(this._progs.trace,  'u_moonSize',    moon.manualSize);
         this._u1i(this._progs.trace, 'u_maxBounces',   this.maxBounces);
         this._u1i(this._progs.trace, 'u_shadowsOn',    this.shadowsOn);
         this._u1f(this._progs.trace, 'u_volDensity',   this.volDensity);

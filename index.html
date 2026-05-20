@@ -14,64 +14,118 @@
     <div id="loading">COMPILING SHADERS...<p>WebGL 2.0 · Path Tracer</p>
     </div>
     <div id="ui" style="display:none">
-        <h3>Path Tracer</h3>
-        <div class="row"><span>Samples</span><span class="v" id="samp">0</span></div>
-        <div class="row"><span>FPS</span><span class="v" id="fps">-</span></div>
-        <div class="row"><span>Resolution</span><span class="v" id="reso">-</span></div>
-        <div class="sep"></div>
 
-        <h3 style="margin-top: 8px;">Sun Settings</h3>
-        <div id="moonInfo" style="font-size:0.78em;opacity:0.6;margin-bottom:6px;letter-spacing:0.05em"></div>
-        <div class="time-sync">
-            <input type="checkbox" id="useRealTime">
-            <label for="useRealTime">Sync to Real Time</label>
-            <span id="realTimeDisplay"
-                style="margin-left:8px;opacity:0.6;font-size:0.85em;font-variant-numeric:tabular-nums;"></span>
+        <!-- Stats bar (always visible) -->
+        <div class="stats-bar">
+            <div class="stat"><span class="stat-label">SPP</span><span class="stat-val" id="samp">0</span></div>
+            <div class="stat"><span class="stat-label">FPS</span><span class="stat-val" id="fps">-</span></div>
+            <div class="stat"><span class="stat-label">RES</span><span class="stat-val" id="reso">-</span></div>
         </div>
 
-        <label>Sun Elevation: <span id="sunElV">8.0</span>°</label>
-        <input type="range" id="sunEl" min="-90" max="90" value="8" step="0.5">
-
-        <label>Sun Rotation: <span id="sunAzV">160</span>°</label>
-        <input type="range" id="sunAz" min="0" max="360" value="160" step="1">
-
-        <label>Sun Intensity: <span id="sunIntV">1.0</span></label>
-        <input type="range" id="sunInt" min="0.1" max="5.0" value="1.0" step="0.1">
-
-        <label>Sun Size: <span id="sunSizeV">1.0</span></label>
-        <input type="range" id="sunSize" min="0.5" max="3.0" value="1.0" step="0.1">
-
         <div class="sep"></div>
-        <label>Exposure: <span id="expoV">1.20</span></label>
-        <input type="range" id="expo" min="0.2" max="4.0" value="1.2" step="0.05">
-        <label>Denoise: <span id="denoiseV">0.80</span></label>
-        <input type="range" id="denoise" min="0" max="1" value="0.8" step="0.05">
-        <div class="sep"></div>
-        <div class="sep"></div>
-        <h3 style="margin-top:8px">Path Tracer</h3>
-        <label>Max Bounces: <span id="bouncesV">6</span></label>
-        <input type="range" id="bounces" min="1" max="12" value="6" step="1">
-        <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
-            <input type="checkbox" id="shadowsOn" checked>
-            <label for="shadowsOn" style="cursor:pointer">Shadows</label>
+
+        <!-- Global: real-time sync + time display -->
+        <div class="global-row">
+            <label class="toggle-wrap">
+                <input type="checkbox" id="useRealTime">
+                <span class="toggle-label">Sync to Real Time</span>
+            </label>
+            <span id="realTimeDisplay" class="time-display"></span>
         </div>
+        <div id="moonInfo" class="moon-info"></div>
+
         <div class="sep"></div>
-        <h3 style="margin-top:8px">Atmosphere</h3>
-        <label>Density: <span id="volDensV">0.055</span></label>
-        <input type="range" id="volDens" min="0.005" max="0.25" value="0.055" step="0.005">
-        <label>Height Falloff: <span id="volHeightV">0.12</span></label>
-        <input type="range" id="volHeight" min="0.01" max="0.5" value="0.12" step="0.01">
-        <label>Scatter: <span id="volScatterV">5.5</span></label>
-        <input type="range" id="volScatter" min="0.5" max="15.0" value="5.5" step="0.5">
+
+        <!-- Accordion sections -->
+
+        <!-- Sun -->
+        <div class="accord" id="accord-sun">
+            <button class="accord-hd" data-target="accord-sun">
+                <span class="accord-icon">☀</span> Sun
+                <span class="accord-arrow">▾</span>
+            </button>
+            <div class="accord-body">
+                <label>Elevation <span class="val" id="sunElV">8.0</span>°</label>
+                <input type="range" id="sunEl" min="-90" max="90" value="8" step="0.5">
+                <label>Azimuth <span class="val" id="sunAzV">160</span>°</label>
+                <input type="range" id="sunAz" min="0" max="360" value="160" step="1">
+                <label>Intensity <span class="val" id="sunIntV">1.0</span></label>
+                <input type="range" id="sunInt" min="0.1" max="5.0" value="1.0" step="0.1">
+                <label>Size <span class="val" id="sunSizeV">1.0</span></label>
+                <input type="range" id="sunSize" min="0.5" max="3.0" value="1.0" step="0.1">
+            </div>
+        </div>
+
+        <!-- Moon -->
+        <div class="accord" id="accord-moon">
+            <button class="accord-hd" data-target="accord-moon">
+                <span class="accord-icon">☽</span> Moon
+                <span class="accord-arrow">▾</span>
+            </button>
+            <div class="accord-body">
+                <label>Phase <span class="val" id="moonPhaseV">0.50</span> <span class="phase-name"
+                        id="moonPhaseName">Full
+                        Moon</span></label>
+                <input type="range" id="moonPhase" min="0" max="1" value="0.5" step="0.01">
+                <label>Brightness <span class="val" id="moonBrightV">1.0</span></label>
+                <input type="range" id="moonBright" min="0" max="3.0" value="1.0" step="0.1">
+                <label>Size <span class="val" id="moonSizeV">1.0</span></label>
+                <input type="range" id="moonSize" min="0.5" max="3.0" value="1.0" step="0.1">
+                <label>Elevation <span class="val" id="moonElV">0</span>°</label>
+                <input type="range" id="moonEl" min="-90" max="90" value="0" step="1">
+                <label>Azimuth <span class="val" id="moonAzV">0</span>°</label>
+                <input type="range" id="moonAz" min="0" max="360" value="0" step="1">
+            </div>
+        </div>
+
+        <!-- Render -->
+        <div class="accord open" id="accord-render">
+            <button class="accord-hd" data-target="accord-render">
+                <span class="accord-icon">◈</span> Render
+                <span class="accord-arrow">▾</span>
+            </button>
+            <div class="accord-body">
+                <label>Exposure <span class="val" id="expoV">1.20</span></label>
+                <input type="range" id="expo" min="0.2" max="4.0" value="1.2" step="0.05">
+                <label>Denoise <span class="val" id="denoiseV">0.80</span></label>
+                <input type="range" id="denoise" min="0" max="1" value="0.8" step="0.05">
+                <label>Max Bounces <span class="val" id="bouncesV">6</span></label>
+                <input type="range" id="bounces" min="1" max="12" value="6" step="1">
+                <label class="toggle-wrap" style="margin-top:8px">
+                    <input type="checkbox" id="shadowsOn" checked>
+                    <span class="toggle-label">Shadows</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Atmosphere -->
+        <div class="accord" id="accord-atm">
+            <button class="accord-hd" data-target="accord-atm">
+                <span class="accord-icon">≋</span> Atmosphere
+                <span class="accord-arrow">▾</span>
+            </button>
+            <div class="accord-body">
+                <label>Density <span class="val" id="volDensV">0.055</span></label>
+                <input type="range" id="volDens" min="0.005" max="0.25" value="0.055" step="0.005">
+                <label>Height Falloff <span class="val" id="volHeightV">0.12</span></label>
+                <input type="range" id="volHeight" min="0.01" max="0.5" value="0.12" step="0.01">
+                <label>Scatter <span class="val" id="volScatterV">5.5</span></label>
+                <input type="range" id="volScatter" min="0.5" max="15.0" value="5.5" step="0.5">
+            </div>
+        </div>
+
         <div class="sep"></div>
         <button id="reset">Reset Accumulation</button>
         <button id="save">Save PNG</button>
+
     </div>
-    <div id="hint">LMB drag: orbit | Scroll: zoom | MMB/RMB drag: pan</div>
+
+    <div id="hint">LMB drag: orbit | Scroll: zoom | RMB drag: pan</div>
     <div id="err"></div>
 
     <canvas id="gimbal" width="90" height="90"
         style="position:fixed;top:16px;left:16px;pointer-events:none;opacity:0.82;z-index:10"></canvas>
+
     <script type="module" src="js/main.js"></script>
 </body>
 

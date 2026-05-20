@@ -56,6 +56,7 @@ uniform vec3      u_moonDir;       // world-space direction to moon
 uniform float     u_moonPhase;     // 0=new, 0.5=full, 1=new
 uniform float     u_moonBright;    // 0..1 luminance scale
 uniform float     u_moonUp;        // smooth horizon fade
+uniform float     u_moonSize;      // angular size multiplier
 uniform sampler2D u_prev;
 
 /* SCENE_GLSL */
@@ -284,8 +285,8 @@ vec3 skyColor(vec3 d) {
   // Physically accurate moon
   float mu = dot(d, u_moonDir);
 
-  // Angular radius of moon ≈ 0.0087 rad (slightly larger than sun)
-  float moonRad = 0.0087;
+  // Angular radius of moon ≈ 0.0087 rad * size multiplier
+  float moonRad = 0.0087 * u_moonSize;
   float cosMR   = cos(moonRad);
   float dCosMR  = moonRad * 0.018;
 

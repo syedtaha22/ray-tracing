@@ -16,15 +16,37 @@
 export class Moon {
     constructor() {
         this.direction  = [0, 1, 0]; // world-space unit vector to moon
-        this.phase      = 0;         // 0–1, 0=new, 0.25=first quarter, 0.5=full
-        this.brightness = 0;         // 0–1 luminance multiplier
-        this.up         = 0;         // smooth 0–1 horizon transition
+        this.phase      = 0.5;       // 0–1, 0=new, 0.25=first quarter, 0.5=full
+        this.brightness = 1.0;       // 0–1 luminance multiplier
+        this.up         = 1.0;      // smooth 0–1 horizon transition
+        this.elongationDeg = 180;
+
+        // Manual override — when set, _compute() uses these instead of real date
+        this.manualPhase  = null;  // 0..1 or null
+        this.manualBright = null;  // 0..3 or null
+        this.manualSize   = 1.0;   // angular size multiplier
+        this.manualEl     = null;  // degrees or null
+        this.manualAz     = null;  // degrees or null
     }
 
-    /** Call once per frame (or once per minute — it barely moves). */
+    /** Call once per frame. */
     update() {
         const now = new Date();
         this._compute(now);
+
+        // Apply any manual overrides
+        if (this.manualPhase  !== null) this.phase      = this.manualPhase;
+        if (this.manualBright !== null) this.brightness = this.manualBright;
+        if (this.manualEl !== null && this.manualAz !== null) {
+            const el = this.manualEl * Math.PI / 180;
+            const az = this.manualAz * Math.PI / 180;
+            this.direction = [
+                Math.cos(el) * Math.sin(az),
+                Math.sin(el),
+                Math.cos(el) * Math.cos(az),
+            ];
+            this.up = Math.max(0, Math.min(1, (Math.sin(el) + 0.04) / 0.08));
+        }
     }
 
     // -------------------------------------------------------------------------

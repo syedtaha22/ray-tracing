@@ -52,7 +52,7 @@ async function main() {
     const sun    = new Sun();
     const moon   = new Moon();
     const input  = new InputHandler(canvas, camera, renderer);
-    const ui     = new UI(renderer, sun);
+    const ui     = new UI(renderer, sun, moon);
     const gimbal  = new Gimbal('gimbal');
 
     // Context loss
