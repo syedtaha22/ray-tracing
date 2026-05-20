@@ -6,9 +6,9 @@
  * and projects the three world axes into screen space.
  *
  * Axes:
- *   X (right)   — red
- *   Y (up)      — green
- *   Z (forward) — blue
+ *   X (right)   - red
+ *   Y (up)      - green
+ *   Z (forward) - blue
  *
  * Negative halves drawn as darker, thinner lines (like Blender).
  */
@@ -44,7 +44,7 @@ class Gimbal {
         ctx.fill();
 
         // Project a world-space unit vector to 2D gimbal space.
-        // Camera right → gimbal X, camera up → gimbal Y (flipped), camera fwd → depth
+        // Camera right -> gimbal X, camera up -> gimbal Y (flipped), camera fwd -> depth
         // We build a simple orthographic projection using the camera's own basis.
         const project = (wx, wy, wz) => {
             // Express the world axis in camera space via dot products
