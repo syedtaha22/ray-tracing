@@ -10,6 +10,8 @@ bin/
 *.dylib
 *.dll
 
+
+
 # Executables
 rt-engine
 *.exe
@@ -20,6 +22,5 @@ rt-engine
 *.swo
 *~
 
-# Vendor - ImGui (install separately)
-src/vendor/imgui/
-.archive/
+# Documentation
+docs/
