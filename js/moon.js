@@ -27,12 +27,19 @@ export class Moon {
         this.manualSize   = 1.0;   // angular size multiplier
         this.manualEl     = null;  // degrees or null
         this.manualAz     = null;  // degrees or null
+
+        this._lastComputeMs = -Infinity; // force compute on first call
     }
 
     /** Call once per frame. */
     update() {
-        const now = new Date();
-        this._compute(now);
+        // Meeus algorithm is expensive and the real moon barely moves frame-to-frame.
+        // Recompute at most once every 5 seconds; manual overrides still apply every frame.
+        const nowMs = Date.now();
+        if (nowMs - this._lastComputeMs > 5000) {
+            this._compute(new Date(nowMs));
+            this._lastComputeMs = nowMs;
+        }
 
         // Apply any manual overrides
         if (this.manualPhase  !== null) this.phase      = this.manualPhase;
@@ -104,17 +111,17 @@ export class Moon {
         this.phase = elongation / 360;
 
         // Brightness: cos curve, full moon = 1, new moon ≈ 0
-        // phase 0.5 = full → cos(0) = 1; phase 0 = new → cos(π) = -1 → clamp to 0
+        // phase 0.5 = full -> cos(0) = 1; phase 0 = new -> cos(π) = -1 -> clamp to 0
         const phaseAngle = Math.abs(elongation - 180) * Math.PI / 180; // 0 at full, π at new
         this.brightness  = Math.pow(Math.max(0, Math.cos(phaseAngle)), 0.6);
 
-        // Convert ecliptic → equatorial → horizontal (az/el)
+        // Convert ecliptic -> equatorial -> horizontal (az/el)
         // Obliquity of ecliptic
         const eps  = (23.439291111 - 0.013004167 * T) * Math.PI / 180;
         const lonR = moonLon * Math.PI / 180;
         const latR = moonLat * Math.PI / 180;
 
-        // Ecliptic → equatorial
+        // Ecliptic -> equatorial
         const sinDec = Math.sin(latR)*Math.cos(eps) + Math.cos(latR)*Math.sin(eps)*Math.sin(lonR);
         const dec    = Math.asin(Math.max(-1, Math.min(1, sinDec)));
         const y      = Math.sin(lonR)*Math.cos(eps) - Math.tan(latR)*Math.sin(eps);
