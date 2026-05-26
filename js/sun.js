@@ -49,7 +49,7 @@ export class Sun {
      * @returns {number[]} RGB intensity triplet
      */
     get color() {
-        // Sky shader now handles night itself — color only matters when sun is up
+        // Sky shader now handles night itself - color only matters when sun is up
         const elRad = this.elevation * Math.PI / 180;
         const t     = Math.max(0, Math.min(1, this.elevation / 25.0));
         const i     = (3.5 + t * 2.5) * Math.max(0, Math.sin(elRad));
@@ -79,7 +79,7 @@ export class Sun {
         this.azimuth = (hours / 24) * 360;
 
         // Elevation: full sine arc, peaks at solar noon (~90° max at equator)
-        // Range -90 to +90 — negative means below horizon (night)
+        // Range -90 to +90 - negative means below horizon (night)
         this.elevation = Math.sin(t * Math.PI) * 75;
     }
 }

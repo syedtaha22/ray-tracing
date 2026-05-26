@@ -299,7 +299,7 @@ vec3 skyColor(vec3 d) {
       vec3 moonRight = normalize(cross(u_moonDir, vec3(0.0, 1.0, 0.0)));
       vec3 moonUp2   = cross(moonRight, u_moonDir);
 
-      // Project ray onto disc plane — gives us UV in [-1,1]^2
+      // Project ray onto disc plane - gives us UV in [-1,1]^2
       vec3 toMoon = d - u_moonDir * mu;
       float discU = dot(toMoon, moonRight) / sin(moonRad);
       float discV = dot(toMoon, moonUp2)   / sin(moonRad);
@@ -318,11 +318,11 @@ vec3 skyColor(vec3 d) {
       float litSide = discU - terminatorX * sqrt(max(0.0, 1.0 - discV*discV));
 
       // For waxing (0..0.5): right side (discU > 0) is lit
-      // For waning (0.5..1): left side is lit — flip
+      // For waning (0.5..1): left side is lit - flip
       float litFraction = (u_moonPhase < 0.5) ? litSide : -litSide;
       float lit = smoothstep(-0.04, 0.04, litFraction);
 
-      // Moon surface colour — slightly warm maria (dark patches) + bright highlands
+      // Moon surface colour - slightly warm maria (dark patches) + bright highlands
       // Simplified: uniform grey with limb darkening
       float limb = 1.0 - 0.35 * (discU*discU + discV*discV);
       vec3  moonSurface = vec3(0.72, 0.74, 0.78) * limb;
@@ -336,7 +336,7 @@ vec3 skyColor(vec3 d) {
       float halo = pow(max(0.0, mu - cosMR + moonRad*4.0) / (moonRad*4.0), 3.0);
       nightSky += vec3(0.75, 0.78, 0.85) * halo * u_moonBright * 0.15 * u_moonUp;
   } else {
-      // Moonlight ambient — whole sky gets a faint cool tint when moon is up
+      // Moonlight ambient - whole sky gets a faint cool tint when moon is up
       float moonAmbient = pow(max(0.0, mu), 32.0) * u_moonBright * u_moonUp;
       nightSky += vec3(0.72, 0.76, 0.85) * moonAmbient * 0.25;
   }

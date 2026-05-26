@@ -40,7 +40,7 @@ export class Renderer {
     }
 
     // -------------------------------------------------------------------------
-    // Init — call once after shaders are loaded
+    // Init - call once after shaders are loaded
     // -------------------------------------------------------------------------
     init(shaders) {
         this._locCache = new WeakMap(); // clear stale locations on re-init
@@ -64,7 +64,7 @@ export class Renderer {
     scheduleReset() { this.needReset = true; }
 
     // -------------------------------------------------------------------------
-    // Per-frame render — call from requestAnimationFrame
+    // Per-frame render - call from requestAnimationFrame
     // -------------------------------------------------------------------------
     render(camera, scene, sun, moon) {
         const gl = this.gl;

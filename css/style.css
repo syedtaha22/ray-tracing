@@ -181,7 +181,7 @@ body {
     background: rgba(255, 136, 0, 0.10);
 }
 
-/* Disabled state — when real-time sync locks sun/moon */
+/* Disabled state - when real-time sync locks sun/moon */
 .accord.locked .accord-hd {
     color: #555;
     border-color: rgba(255, 255, 255, 0.04);

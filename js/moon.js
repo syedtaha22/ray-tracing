@@ -3,14 +3,14 @@
  *
  * Computes physically accurate moon position and phase from the real date.
  *
- * Algorithm: simplified lunar theory (accurate to ~1° — sufficient for
+ * Algorithm: simplified lunar theory (accurate to ~1° - sufficient for
  * a sky renderer). Based on Jean Meeus "Astronomical Algorithms" Ch.47.
  *
  * Outputs passed to the shader as uniforms:
- *   u_moonDir      — normalised world-space direction to the moon
- *   u_moonPhase    — 0=new, 0.5=full, 1=new again  (continuous 0..1)
- *   u_moonBright   — luminance scale (full moon ≈ 1.0, new moon ≈ 0.0)
- *   u_moonUp       — 1 if moon is above horizon, else 0 (smooth transition)
+ *   u_moonDir      - normalised world-space direction to the moon
+ *   u_moonPhase    - 0=new, 0.5=full, 1=new again  (continuous 0..1)
+ *   u_moonBright   - luminance scale (full moon ≈ 1.0, new moon ≈ 0.0)
+ *   u_moonUp       - 1 if moon is above horizon, else 0 (smooth transition)
  */
 
 export class Moon {
@@ -21,7 +21,7 @@ export class Moon {
         this.up         = 1.0;      // smooth 0–1 horizon transition
         this.elongationDeg = 180;
 
-        // Manual override — when set, _compute() uses these instead of real date
+        // Manual override - when set, _compute() uses these instead of real date
         this.manualPhase  = null;  // 0..1 or null
         this.manualBright = null;  // 0..3 or null
         this.manualSize   = 1.0;   // angular size multiplier
@@ -100,7 +100,7 @@ export class Moon {
         // Phase
         // Elongation = angular separation between moon and sun on ecliptic
         let elongation = ((moonLon - sunLon) % 360 + 360) % 360;
-        // phase 0=new, 0.5=full — continuous
+        // phase 0=new, 0.5=full - continuous
         this.phase = elongation / 360;
 
         // Brightness: cos curve, full moon = 1, new moon ≈ 0
@@ -123,12 +123,12 @@ export class Moon {
 
         // Greenwich Sidereal Time (radians)
         const GST  = (280.46061837 + 360.98564736629*(jd-2451545.0)) * Math.PI / 180;
-        // Hour angle (using Greenwich — approximate, no observer longitude needed
+        // Hour angle (using Greenwich - approximate, no observer longitude needed
         // for a sky renderer that just needs relative moon position)
         const HA   = GST - ra;
 
         // Horizontal coordinates
-        // Using a mid-latitude observer (30°N) as a reasonable default —
+        // Using a mid-latitude observer (30°N) as a reasonable default -
         // the exact latitude doesn't matter much for a renderer, it just
         // shifts the elevation slightly
         const lat  = 24.8607 * Math.PI / 180; // Karachi latitude

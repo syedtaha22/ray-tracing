@@ -25,7 +25,7 @@ const N_OBJ = 16;
 
 // Each object has:
 // - pos: center position (x, y, z)
-// - half: half-size (hx, hy, hz) — used for AABB intersection
+// - half: half-size (hx, hy, hz) - used for AABB intersection
 // - mat: material ID (0=empty, 1=water, 2=solid)
 // - on: 1 if the object is active, 0 if it's inactive (used to skip in shader)
 
@@ -42,8 +42,8 @@ export class Scene {
     constructor() {
         const objects = [
             { pos: b2gl(0, 0, -1.218),         half: b2dim(1, 1, 1),               mat: 2, on: 1 }, // mat 0→2 (matte)
-            // Sea plane is now a world property — no bounding cube needed
-            // volume bounds cube removed (redundant — volume is now a world property)
+            // Sea plane is now a world property - no bounding cube needed
+            // volume bounds cube removed (redundant - volume is now a world property)
             { pos: b2gl(4.207, 6.625, 1.119),   half: [0.0785, 0.0785, 0.0785],    mat: 2, on: 1 },
             { pos: b2gl(4.511, 5.842, 1.141),   half: [0.0785, 0.0785, 0.0785],    mat: 2, on: 1 },
             { pos: b2gl(4.478, 9.127, 1.315),   half: [0.0785, 0.0785, 0.0785],    mat: 2, on: 1 },
@@ -63,11 +63,11 @@ export class Scene {
             objects.push({ pos: [0,0,0], half: [0.001,0.001,0.001], mat: 0, on: 0 });
         }
 
-        // Flattened typed arrays — uploaded once as uniforms
+        // Flattened typed arrays - uploaded once as uniforms
         // posArr: center positions of all objects (x0, y0, z0, x1, y1, z1, ...)
         // halfArr: half-sizes of all objects (hx, hy, hz, hx, hy, hz, ...)
         // matArr: material IDs of all objects (m0, m1, m2, ...)
-        // activeArr: on/off flags for all objects (1.0 or 0.0) — used to skip inactive ones in shader
+        // activeArr: on/off flags for all objects (1.0 or 0.0) - used to skip inactive ones in shader
         this.posArr    = new Float32Array(N_OBJ * 3); // * 3 for x,y,z components
         this.halfArr   = new Float32Array(N_OBJ * 3);
         this.matArr    = new Int32Array(N_OBJ);
@@ -80,7 +80,7 @@ export class Scene {
             this.activeArr[i] = o.on;
         });
 
-        // Volume is a world property — no bounding cube needed
+        // Volume is a world property - no bounding cube needed
         this.volMin = [-999, -999, -999];
         this.volMax = [ 999,  999,  999];
     }

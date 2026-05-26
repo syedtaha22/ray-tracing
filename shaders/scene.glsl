@@ -24,16 +24,16 @@ uniform int   u_mat[N_OBJ];
 uniform float u_active[N_OBJ];
 uniform float u_time;
 
-// Four-octave wave height — calm ocean swell with visible surface movement
+// Four-octave wave height - calm ocean swell with visible surface movement
 // Amplitudes tuned so waves are readable from above but not violent
 float waveHeight(vec2 xz) {
-  // Primary swell — long wavelength, slow, dominant
+  // Primary swell - long wavelength, slow, dominant
   float h  = sin(xz.x * 0.40 + u_time * 0.55) * cos(xz.y * 0.30 + u_time * 0.45) * 0.28;
   
   // Secondary cross-swell at ~60° angle
   h += sin(xz.x * 0.95 - u_time * 0.70) * cos(xz.y * 1.05 + u_time * 0.60) * 0.12;
   
-  // Ripple layer — smaller, faster
+  // Ripple layer - smaller, faster
   h += sin(xz.x * 3.70 + u_time * 1.20) * cos(xz.y * 4.30 - u_time * 1.00) * 0.030;
   
   // Fine detail
@@ -42,7 +42,7 @@ float waveHeight(vec2 xz) {
   return h;
 }
 
-// Normal sample epsilon — larger for the bigger waves
+// Normal sample epsilon - larger for the bigger waves
 vec3 waveNormal(vec2 xz) {
     float eps = 0.08;
     float hL = waveHeight(xz - vec2(eps, 0.0));
@@ -181,7 +181,7 @@ Hit intersect(vec3 ro, vec3 rd) {
   best.mat = -1;
   best.isWater = false;
 
-  // Infinite water plane (mat 1) — replaces the flat AABB sea slab
+  // Infinite water plane (mat 1) - replaces the flat AABB sea slab
   float tw = hitWaterPlane(ro, rd);
   if (tw > 1e-3) {
       best.t       = tw;

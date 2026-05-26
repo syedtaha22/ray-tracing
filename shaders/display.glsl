@@ -37,7 +37,7 @@ vec3 aces(vec3 x) {
 void main() {
     vec3 c = texture(u_tex, v_uv).rgb;
 
-    // Night desaturation only — above water, moonlight is nearly greyscale.
+    // Night desaturation only - above water, moonlight is nearly greyscale.
     // Underwater appearance is handled physically in trace.glsl (Beer's law,
     // volumetric absorption) so we do NOT apply any tint here.
     float dayAmt = smoothstep(-12.0, 8.0, u_sunElevation);

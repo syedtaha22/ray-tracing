@@ -16,7 +16,7 @@ export class UI {
         this._bindButtons();
     }
 
-    // ── Public ───────────────────────────────────────────────────────────────
+    // Public
 
     get useRealTime() { return this._useRealTime; }
 
@@ -44,19 +44,19 @@ export class UI {
         el.textContent = `☽  ${name}  ·  ${pct}% lit`;
     }
 
-    // ── Accordion ────────────────────────────────────────────────────────────
+    // Accordion
 
     _initAccordion() {
         document.querySelectorAll('.accord-hd').forEach(btn => {
             btn.addEventListener('click', () => {
                 const accord = btn.closest('.accord');
-                // Locked sections still open/close — just inputs are disabled
+                // Locked sections still open/close - just inputs are disabled
                 accord.classList.toggle('open');
             });
         });
     }
 
-    // ── Global controls ───────────────────────────────────────────────────────
+    // Global controls
 
     _bindGlobal() {
         document.getElementById('useRealTime').addEventListener('change', e => {
@@ -67,7 +67,7 @@ export class UI {
     }
 
     _applyRealTimeLock(locked) {
-        // Lock sun and moon sections — still openable, inputs disabled
+        // Lock sun and moon sections - still openable, inputs disabled
         ['accord-sun', 'accord-moon'].forEach(id => {
             document.getElementById(id).classList.toggle('locked', locked);
         });
@@ -81,7 +81,7 @@ export class UI {
         }
     }
 
-    // ── Sun ──────────────────────────────────────────────────────────────────
+    // Sun
 
     _bindSun() {
         this._wire('sunAz', 'sunAzV', 0, v => {
@@ -98,7 +98,7 @@ export class UI {
         this._wire('sunSize', 'sunSizeV', 1, v => { this._sun.size      = v; this._renderer.scheduleReset(); });
     }
 
-    // ── Moon ─────────────────────────────────────────────────────────────────
+    // Moon
 
     _bindMoon() {
         this._wire('moonPhase', 'moonPhaseV', 2, v => {
@@ -129,7 +129,7 @@ export class UI {
         });
     }
 
-    // ── Render ────────────────────────────────────────────────────────────────
+    // Render
 
     _bindRender() {
         this._wire('expo',    'expoV',    2, v => { this._renderer.exposure   = v; });
@@ -141,7 +141,7 @@ export class UI {
         });
     }
 
-    // ── Atmosphere ────────────────────────────────────────────────────────────
+    // Atmosphere
 
     _bindAtmosphere() {
         this._wire('volDens',    'volDensV',    3, v => { this._renderer.volDensity = v;  this._renderer.scheduleReset(); });
@@ -149,7 +149,7 @@ export class UI {
         this._wire('volScatter', 'volScatterV', 1, v => { this._renderer.volScatter = v;  this._renderer.scheduleReset(); });
     }
 
-    // ── Buttons ───────────────────────────────────────────────────────────────
+    // Buttons
 
     _bindButtons() {
         document.getElementById('reset').addEventListener('click',
@@ -163,7 +163,7 @@ export class UI {
         });
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // Helpers
 
     _wire(id, valId, dec, cb) {
         const el = document.getElementById(id);
