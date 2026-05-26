@@ -6,6 +6,9 @@
 
 "use strict";
 
+// Tuning constants - edit here to adjust quality vs. performance
+const ATROUS_PASSES = 4;  // denoiser iterations (try 3)
+
 export class Renderer {
     constructor(canvas) {
         this.canvas = canvas;
@@ -114,7 +117,7 @@ export class Renderer {
 
         // --- Pass 2: A-Trous denoiser (4 iterations) ------------------------
         let curTex = this._accumFBOs[dst].tex;
-        for (let step = 0; step < 4; step++) {
+        for (let step = 0; step < ATROUS_PASSES; step++) {
             const adst = step % 2;
             gl.bindFramebuffer(gl.FRAMEBUFFER, this._atrousFBOs[adst].fbo);
             gl.viewport(0, 0, W, H);

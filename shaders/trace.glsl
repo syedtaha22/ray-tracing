@@ -37,6 +37,37 @@
 precision highp float;
 precision highp int;
 
+// ----------------------------------------------------------------------------
+// Tuning constants - edit here to adjust quality vs. performance
+// ----------------------------------------------------------------------------
+
+// Path tracing
+#define MAX_BOUNCES       6       // hard loop cap; must be >= the UI slider max (try 4)
+// Loop will run for max(MAX_BOUNCES, u_maxBounces) iterations. In case MAX_BOUNCES is < u_maxBounces,
+// the shader will ignore the UI slider and always use MAX_BOUNCES. I should probably set MAX_BOUNCES to 16
+// or something high to avoid this confusion, but it does mean you can recompile with a lower MAX_BOUNCES for 
+// faster testing without having to change the UI slider.
+
+// Volumetric - above water
+#define VOL_STEPS_AIR     32      // march steps above water            (try 24)
+#define VOL_DIST_AIR      60.0    // max march distance in air (world units)
+#define VOL_HG_G_AIR      0.78    // Henyey-Greenstein anisotropy, air  (0=isotropic, 1=full forward)
+#define VOL_TRANS_EXIT_AIR  0.004 // early-exit transmittance threshold (higher = fewer steps)
+
+// Volumetric - underwater
+#define VOL_STEPS_WATER   20      // march steps underwater             (try 16)
+#define VOL_DIST_WATER    20.0    // max march distance underwater (world units)
+#define VOL_HG_G_WATER    0.70    // Henyey-Greenstein anisotropy, water
+#define VOL_TRANS_EXIT_WATER 0.005 // early-exit transmittance threshold
+
+// Star field
+#define STAR_SCALE        200.0   // Voronoi cell density - higher = more stars (try 150)
+#define STAR_RAMP         0.062   // color ramp cutoff - higher = larger stars
+
+#define M_PI 3.14159265
+
+// ----------------------------------------------------------------------------
+
 in vec2 v_uv;
 out vec4 fragColor;
 
@@ -150,7 +181,7 @@ vec3 ggxSample(vec3 n, float r, vec2 xi) {
 float ggxD(float NdH, float r) {
   float a2 = r * r * r * r;
   float d = NdH * NdH * (a2 - 1.0) + 1.0;
-  return a2 / max(3.14159265 * d * d, 1e-6);
+  return a2 / max(M_PI * d * d, 1e-6);
 }
 
 /**
@@ -213,13 +244,13 @@ float voronoiDist(vec3 p, float scale) {
 float starField(vec3 d) {
   // Voronoi on the unit sphere direction vector
   // Scale ~200 gives a dense Milky-Way-style field
-  float dist = voronoiDist(normalize(d), 200.0);
+  float dist = voronoiDist(normalize(d), STAR_SCALE);
 
   // Color ramp: white at 0, black at 0.062, linear - matches Blender setup
-  float star = clamp(1.0 - dist / 0.062, 0.0, 1.0);
+  float star = clamp(1.0 - dist / STAR_RAMP, 0.0, 1.0);
 
   // Twinkle: each star gets a unique phase from its cell hash
-  vec3  sp      = normalize(d) * 200.0;
+  vec3  sp      = normalize(d) * STAR_SCALE;
   vec3  cell    = floor(sp);
   float phase   = voronoiHash3(cell).x;
   float twinkle = 0.75 + 0.25 * sin(u_time * (1.5 + phase * 6.0) + phase * 6.28318);
@@ -396,20 +427,20 @@ float causticPattern(vec3 p) {
 vec3 marchVol(vec3 ro, vec3 rd, float tMax) {
   if (underwater(ro) && rd.y < 0.0) return vec3(0.0);
 
-  float dist  = min(tMax, 60.0);
-  float stp   = dist / 32.0;
+  float dist  = min(tMax, VOL_DIST_AIR);
+  float stp   = dist / float(VOL_STEPS_AIR);
   vec3 accum = vec3(0.0);
   float trans = 1.0;
 
   float cosT = dot(rd, u_sunDir);
-  float g = 0.78;
-  float phase = (1.0 - g * g) / (4.0 * 3.14159265 * pow(max(0.0, 1.0 + g * g - 2.0 * g * cosT), 1.5));
+  float g = VOL_HG_G_AIR;
+  float phase = (1.0 - g * g) / (4.0 * M_PI * pow(max(0.0, 1.0 + g * g - 2.0 * g * cosT), 1.5));
   float sunUp = max(0.0, u_sunDir.y);
 
   // Per-pixel jitter - breaks step-aligned shadow banding into noise
   float jitter = rand1() * stp;
 
-  for (int i = 0; i < 32; i++) {
+  for (int i = 0; i < VOL_STEPS_AIR; i++) {
     float t = jitter + float(i) * stp;
     if (t > dist) break;
     vec3 p = ro + rd * t;
@@ -429,7 +460,7 @@ vec3 marchVol(vec3 ro, vec3 rd, float tMax) {
     trans *= exp(-od);
 
     // Early termination
-    if (trans < 0.004)
+    if (trans < VOL_TRANS_EXIT_AIR)
       break;
   }
 
@@ -440,8 +471,8 @@ vec3 marchVol(vec3 ro, vec3 rd, float tMax) {
 // Volumetric - underwater (blue god rays + depth fog)
 // ----------------------------------------------------------------------------
 vec3 marchUnderwaterVol(vec3 ro, vec3 rd, float tMax) {
-    float dist = min(tMax, 20.0);
-    float stp  = dist / 20.0;
+    float dist = min(tMax, VOL_DIST_WATER);
+    float stp  = dist / float(VOL_STEPS_WATER);
     vec3  accum = vec3(0.0);
     float trans = 1.0;
 
@@ -449,10 +480,10 @@ vec3 marchUnderwaterVol(vec3 ro, vec3 rd, float tMax) {
     vec3 absorption = vec3(0.45, 0.12, 0.04);  // per-meter
 
     float cosT  = dot(rd, u_sunDir);
-    float g = 0.7;
-    float phase = (1.0-g*g)/(4.0*3.14159265*pow(max(0.0,1.0+g*g-2.0*g*cosT),1.5));
+    float g = VOL_HG_G_WATER;
+    float phase = (1.0-g*g)/(4.0*M_PI*pow(max(0.0,1.0+g*g-2.0*g*cosT),1.5));
 
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < VOL_STEPS_WATER; i++) {
         float t = (float(i)+0.5)*stp;
         vec3  p = ro + rd*t;
 
@@ -473,7 +504,7 @@ vec3 marchUnderwaterVol(vec3 ro, vec3 rd, float tMax) {
         vec3 sunUW = u_sunColor * vec3(0.1, 0.5, 1.0) * exp(-depth * 0.3);
         accum += trans * sunUW * phase * vis * stp * 0.8 * u_sunIntensity;
         trans *= tr.g; // single transmittance value for overall transparency
-        if (trans < 0.005) break;
+        if (trans < VOL_TRANS_EXIT_WATER) break;
     }
     return accum;
 }
@@ -490,7 +521,7 @@ vec3 tracePath(vec3 ro, vec3 rd) {
   vec3 tp = vec3(1.0);  // Throughput (cumulative transmission)
   vec3 rad = vec3(0.0); // Accumulated radiance
 
-  for (int b = 0; b < 6; b++) {
+  for (int b = 0; b < MAX_BOUNCES; b++) {
     if (b >= u_maxBounces) break;
     bool isUnder = underwater(ro);
 
@@ -555,7 +586,7 @@ vec3 tracePath(vec3 ro, vec3 rd) {
       float G = ggxG1(NdL, rough)*ggxG1(NdV, rough);
       
       vec3 spec = vec3(F*D*G/max(4.0*NdV*NdL,1e-6));
-      vec3 diff = alb*(1.0-metal)/3.14159265;
+      vec3 diff = alb*(1.0-metal)/M_PI;
       
       if (!sh)
         rad += tp * (diff + spec) * u_sunColor * NdL * u_sunIntensity;

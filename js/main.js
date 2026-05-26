@@ -1,6 +1,6 @@
 /**
  * main.js
- * Entry point — boots the engine in four steps:
+ * Entry point - boots the engine in four steps:
  *   1. Grab DOM references and set up error/loading UI
  *   2. Obtain a WebGL2 context
  *   3. Load shaders asynchronously
@@ -8,6 +8,10 @@
  */
 
 "use strict";
+
+// Tuning constants - edit here to adjust quality vs. performance
+// I should consider moving this some place else...
+const SUN_RESET_THRESHOLD_DEG = 0.1;  // degrees of sun movement before resetting accumulation (try 0.5)
 
 import { Renderer }      from './renderer.js';
 import { ShaderLoader }  from './shaders.js';
@@ -95,11 +99,11 @@ async function main() {
             sun.syncToRealTime();
             ui.syncSunDisplay();
 
-            // Reset accumulation when sun moves more than 0.1° —
+            // Reset accumulation when sun moves more than SUN_RESET_THRESHOLD_DEG
             // avoids ghosting as the sun travels across the sky
             const azDiff = Math.abs(sun.azimuth   - lastSunAz);
             const elDiff = Math.abs(sun.elevation - lastSunEl);
-            if (azDiff > 0.1 || elDiff > 0.1) {
+            if (azDiff > SUN_RESET_THRESHOLD_DEG || elDiff > SUN_RESET_THRESHOLD_DEG) {
                 renderer.scheduleReset();
                 lastSunAz = sun.azimuth;
                 lastSunEl = sun.elevation;
