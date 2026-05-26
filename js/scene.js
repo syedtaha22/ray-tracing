@@ -41,7 +41,7 @@ const N_OBJ = 16;
 export class Scene {
     constructor() {
         const objects = [
-            { pos: b2gl(0, 0, -1.218),         half: b2dim(1, 1, 1),               mat: 2, on: 1 }, // mat 0→2 (matte)
+            { pos: b2gl(0, 0, -1.218),         half: b2dim(1, 1, 1),               mat: 2, on: 1 }, // mat 0->2 (matte)
             // Sea plane is now a world property - no bounding cube needed
             // volume bounds cube removed (redundant - volume is now a world property)
             { pos: b2gl(4.207, 6.625, 1.119),   half: [0.0785, 0.0785, 0.0785],    mat: 2, on: 1 },
