@@ -127,6 +127,23 @@ export class UI {
             this._moon.manualAz = v;
             this._renderer.scheduleReset();
         });
+
+        // Initialize moon from slider defaults on page load (only if NOT in real-time mode)
+        // Real-time mode will compute moon from actual date/time
+        if (!this._useRealTime) {
+            const moonPhaseEl = document.getElementById('moonPhase');
+            const moonBrightEl = document.getElementById('moonBright');
+            const moonSizeEl = document.getElementById('moonSize');
+            const moonElEl = document.getElementById('moonEl');
+            const moonAzEl = document.getElementById('moonAz');
+            if (moonPhaseEl) this._moon.manualPhase = parseFloat(moonPhaseEl.value);
+            if (moonBrightEl) this._moon.manualBright = parseFloat(moonBrightEl.value);
+            if (moonSizeEl) this._moon.manualSize = parseFloat(moonSizeEl.value);
+            if (moonElEl && moonAzEl) {
+                this._moon.manualEl = parseFloat(moonElEl.value);
+                this._moon.manualAz = parseFloat(moonAzEl.value);
+            }
+        }
     }
 
     // Render
@@ -188,6 +205,10 @@ export class UI {
             'New Moon', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous',
             'Full Moon', 'Waning Gibbous',  'Last Quarter',  'Waning Crescent',
         ];
-        return names[Math.round(phase * 8) % 8];
+        // Fold phase into 0..1 triangle (0=new, 0.5=full, 1=new)
+        // then map to 8 buckets. Clamp keeps 0.0 and 1.0 both at index 0.
+        const t   = 1.0 - Math.abs(phase * 2.0 - 1.0);
+        const idx = Math.min(7, Math.floor(t * 8));
+        return names[idx];
     }
 }
