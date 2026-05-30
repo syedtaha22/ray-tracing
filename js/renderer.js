@@ -82,6 +82,11 @@ export class Renderer {
         const cam = camera.getMatrices();
         const { W, H } = this;
 
+        // Stop rendering after 500 samples per pixel
+        if (this.frame >= 500) {
+            return;
+        }
+
         // --- Pass 1: path trace ---------------------------------------------
         const src = this.frame % 2, dst = 1 - src;
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._accumFBOs[dst].fbo);
