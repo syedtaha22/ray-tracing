@@ -313,7 +313,7 @@ vec3 skyColor(vec3 d) {
   float starVis = clamp(d.y * 3.0, 0.0, 1.0) * nightAmt;
   nightSky += starField(normalize(d)) * starVis * vec3(0.9, 0.92, 1.0) * 1.4;
 
-  // Physically accurate moon
+  // Simple crescent moon using SDF + CSG (Constructive Solid Geometry)
   float mu = dot(d, u_moonDir);
 
   // Angular radius of moon ≈ 0.0087 rad * size multiplier
@@ -321,12 +321,11 @@ vec3 skyColor(vec3 d) {
   float cosMR   = cos(moonRad);
   float dCosMR  = moonRad * 0.018;
 
-  // Is this ray within the moon disc?
+  // Is this ray roughly within the moon disc region?
   float inDisc = smoothstep(cosMR - dCosMR, cosMR + dCosMR, mu);
 
   if (inDisc > 0.0) {
       // Build a local 2D coordinate system on the moon disc
-      // so we can draw the phase terminator
       vec3 moonRight = normalize(cross(u_moonDir, vec3(0.0, 1.0, 0.0)));
       vec3 moonUp2   = cross(moonRight, u_moonDir);
 
@@ -335,42 +334,53 @@ vec3 skyColor(vec3 d) {
       float discU = dot(toMoon, moonRight) / sin(moonRad);
       float discV = dot(toMoon, moonUp2)   / sin(moonRad);
 
-      // Phase terminator: the boundary between lit and dark
-      // elongation 0° = new (fully dark), 180° = full (fully lit)
-      // phase 0..1 maps to elongation 0..360°
-      float phaseAngle = u_moonPhase * 6.28318; // radians
+      // --- Crescent Geometry using Two Circles ---
+      // Circle 1: The visible moon body
+      float moonRadius = 1.0;
+      float d_moon = length(vec2(discU, discV)) - moonRadius;
 
-      // The terminator is a great circle seen as a vertical line on the disc.
-      // Its X position: cos(phaseAngle - π) gives -1 at new, 0 at quarter, +1 at full
-      // The lit side: for waxing (phase < 0.5) right side is lit; waning left side
-      float terminatorX = cos(phaseAngle); // -1=new, +1=full
+      // Circle 2: The shadow (offset based on phase)
+      // Shadow should be slightly larger than moon to ensure it can fully occlude
+      float shadowRadius = moonRadius + 0.2;
 
-      // Signed distance from terminator (positive = lit side)
-      float litSide = discU - terminatorX * sqrt(max(0.0, 1.0 - discV*discV));
+      // Phase mapping:
+      //   0.0 = new moon   → shadow centred (dark)
+      //   0.5 = full moon  → shadow fully off to one side (all lit)
+      //   1.0 = new moon   → shadow centred again (dark)
+      //
+      // Waxing (0.0→0.5): shadow moves right, lit crescent grows on left
+      // Waning (0.5→1.0): shadow moves left, lit crescent shrinks on left
+      float maxOffset    = moonRadius + shadowRadius + 0.1;
+      float normalised   = u_moonPhase < 0.5
+          ? u_moonPhase * 2.0           // 0→1 waxing
+          : (1.0 - u_moonPhase) * 2.0; // 1→0 waning
 
-      // For waxing (0..0.5): right side (discU > 0) is lit
-      // For waning (0.5..1): left side is lit - flip
-      float litFraction = (u_moonPhase < 0.5) ? litSide : -litSide;
-      float lit = smoothstep(-0.04, 0.04, litFraction);
+      float d_offset     = maxOffset * normalised;
+      float offsetDir    = u_moonPhase < 0.5 ? 1.0 : -1.0;
+      vec2  shadowOffset = vec2(offsetDir * d_offset, 0.0);
+      float d_shadow = length(vec2(discU, discV) - shadowOffset) - shadowRadius;
 
-      // Moon surface colour - slightly warm maria (dark patches) + bright highlands
-      // Simplified: uniform grey with limb darkening
-      float limb = 1.0 - 0.35 * (discU*discU + discV*discV);
-      vec3  moonSurface = vec3(0.72, 0.74, 0.78) * limb;
+      // Edge smoothing for anti-aliasing
+      float edgeSmooth = 0.08;
 
-      // Brightness: full moon ≈ bright enough to cast shadows (~2.5 cd/m²)
+      // CSG Boolean: moon AND NOT shadow
+      float inMoon = smoothstep(edgeSmooth, -edgeSmooth, d_moon);
+      float inShadow = smoothstep(edgeSmooth, -edgeSmooth, d_shadow);
+      float crescent = inMoon * (1.0 - inShadow);
+
+      // Moon colour: warm off-white
+      vec3 moonSurface = vec3(0.95, 0.92, 0.75);
+
+      // Apply brightness and visibility, with inDisc blend for smooth edge
       float moonLum = u_moonBright * 2.8;
+      nightSky += moonSurface * crescent * moonLum * inDisc * u_moonUp;
 
-      nightSky += moonSurface * lit * moonLum * inDisc * u_moonUp;
-
-      // Subtle glow halo (atmospheric refraction around disc)
-      float halo = pow(max(0.0, mu - cosMR + moonRad*4.0) / (moonRad*4.0), 3.0);
-      nightSky += vec3(0.75, 0.78, 0.85) * halo * u_moonBright * 0.15 * u_moonUp;
-  } else {
-      // Moonlight ambient - whole sky gets a faint cool tint when moon is up
-      float moonAmbient = pow(max(0.0, mu), 32.0) * u_moonBright * u_moonUp;
-      nightSky += vec3(0.72, 0.76, 0.85) * moonAmbient * 0.25;
   }
+
+  // Moonlight ambient - whole sky gets a faint cool tint when moon is up
+  float phaseLit    = u_moonPhase < 0.5 ? u_moonPhase * 2.0 : (1.0 - u_moonPhase) * 2.0;
+  float moonAmbient = pow(max(0.0, mu), 32.0) * u_moonBright * u_moonUp * phaseLit;
+  nightSky += vec3(0.72, 0.76, 0.85) * moonAmbient * 0.25;
 
   // --- Blend all three layers ---
   vec3 sky = nightSky;
